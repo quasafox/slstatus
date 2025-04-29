@@ -7,8 +7,10 @@ extern char buf[1024];
 
 extern char *argv0;
 
+__attribute__((__cold__))
 void warn(const char *, ...);
 __attribute__((__noreturn__))
+__attribute__((__cold__))
 void die(const char *, ...);
 
 int esnprintf(char *str, size_t size, const char *fmt, ...);
