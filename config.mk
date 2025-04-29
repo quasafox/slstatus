@@ -8,7 +8,7 @@ PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
 # flags
-CPPFLAGS = -D_DEFAULT_SOURCE -DVERSION=\"${VERSION}\"
+CPPFLAGS = -D_DEFAULT_SOURCE -D_GNU_SOURCE -DVERSION=\"${VERSION}\"
 CFLAGS   = -std=c99 -pedantic -Wall -Wextra -Wno-unused-parameter -Os
 LDFLAGS  = -s
 # OpenBSD: add -lsndio

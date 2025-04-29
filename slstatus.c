@@ -1,10 +1,13 @@
 /* See LICENSE file for copyright and license details. */
+#include <sys/stat.h>
+#include <sys/uio.h>
 #include <errno.h>
 #include <signal.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "arg.h"
 #include "slstatus.h"
@@ -47,10 +50,12 @@ main(int argc, char *argv[])
 {
 	struct sigaction act;
 	struct timespec start, current, diff, intspec, wait;
+	struct stat statb;
 	size_t i, len;
 	int ret;
-	char status[MAXLEN];
+	char status[MAXLEN+1];
 	const char *res;
+	int stdout_pipe;
 
 	ARGBEGIN {
 	case 'v':
@@ -72,6 +77,10 @@ main(int argc, char *argv[])
 	act.sa_flags |= SA_RESTART;
 	sigaction(SIGUSR1, &act, NULL);
 
+	if (fstat(STDOUT_FILENO, &statb) < 0)
+		die("failed to fstat() stdout:");
+	stdout_pipe = S_ISFIFO(statb.st_mode);
+
 	do {
 		if (clock_gettime(CLOCK_MONOTONIC, &start) < 0)
 			die("clock_gettime:");
@@ -87,11 +96,20 @@ main(int argc, char *argv[])
 
 			len += ret;
 		}
+		status[len++] = '\n';
 
-		puts(status);
-		fflush(stdout);
-		if (ferror(stdout))
-			die("puts:");
+		if (stdout_pipe) {
+			const struct iovec iobuf = {
+			    .iov_base = status,
+			    .iov_len = len
+			};
+
+			if (vmsplice(STDOUT_FILENO, &iobuf, 1, 0) < 0)
+				warn("vmsplice():");
+		} else {
+			if (write(STDOUT_FILENO, status, len) < 0)
+				warn("write():");
+		}
 
 		if (!done) {
 			if (clock_gettime(CLOCK_MONOTONIC, &current) < 0)
