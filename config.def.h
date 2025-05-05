@@ -38,8 +38,8 @@ static const char unknown_str[] = "n/a";
  * keymap              layout (variant) of current     NULL
  *                     keymap
  * load_avg            load average                    NULL
- * netspeed_rx         receive network speed           interface name (wlan0)
- * netspeed_tx         transfer network speed          interface name (wlan0)
+ * netspeed_rx         receive network speed           interface name (wlan0) or NULL
+ * netspeed_tx         transfer network speed          interface name (wlan0) or NULL
  * num_files           number of files in a directory  path
  *                                                     (/home/foo/Inbox/cur)
  * ram_free            free memory in GB               NULL
