@@ -13,6 +13,7 @@ COM =\
 	components/disk\
 	components/entropy\
 	components/hostname\
+	components/ifname\
 	components/ip\
 	components/kernel_release\
 	components/load_avg\

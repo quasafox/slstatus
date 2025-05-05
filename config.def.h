@@ -29,6 +29,7 @@ static const char unknown_str[] = "n/a";
  * entropy             available entropy               NULL
  * gid                 GID of current user             NULL
  * hostname            hostname                        NULL
+ * ifname              network interface name          NULL
  * ipv4                IPv4 address                    interface name (eth0)
  * ipv6                IPv6 address                    interface name (eth0)
  * kernel_release      `uname -r`                      NULL
