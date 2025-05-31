@@ -69,9 +69,7 @@ static const struct arg args[] = {
 	{ cpu_perc,    "%03s%%  ", NULL },
 	{ load_avg,    "%s | ", NULL },
 	{ netspeed_rx, "%08sB ↓↓ ", NULL },
-	{ netspeed_tx, "%08sB ↑↑ ", NULL },
-	{ ifname,      "(%s) | ", NULL },
-	{ ram_used,    "%09sB  ", NULL },
-	{ ram_perc,    "%03s%% | ", NULL },
-	{ datetime,    "%s", "%A %B %e %H:%M %Y" },
+	{ netspeed_tx, "%08sB ↑↑ |", NULL },
+	{ ram_used,    "%09sB | ", NULL },
+	{ datetime,    "%s", "%A %B %e %H:%M" },
 };
