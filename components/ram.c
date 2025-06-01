@@ -6,6 +6,9 @@
 
 #if defined(__linux__)
 	#include <stdint.h>
+	#include <stddef.h>
+	#include <assert.h>
+	#include "../util-aux.h"
 
 	const char *
 	ram_free(const char *unused)
@@ -59,19 +62,48 @@
 	const char *
 	ram_used(const char *unused)
 	{
-		uintmax_t total, free, buffers, cached, used;
+		static char readbuf[4096];
+		size_t nread = sizeof(readbuf);
+		size_t memtotal, memfree, buffers, cached, srecl;
 
-		if (pscanf("/proc/meminfo",
-		           "MemTotal: %ju kB\n"
-		           "MemFree: %ju kB\n"
-		           "MemAvailable: %ju kB\n"
-		           "Buffers: %ju kB\n"
-		           "Cached: %ju kB\n",
-		           &total, &free, &buffers, &buffers, &cached) != 5)
+		if (unlikely(!read_whole_file("/proc/meminfo", readbuf, &nread)))
 			return NULL;
 
-		used = (total - free - buffers - cached);
-		return fmt_human(used * 1024, 1024);
+		char *line;
+		size_t linelen;
+		char found = 5;
+		struct line_iter iter = LINE_ITER(readbuf, nread);
+		while (likely(line_iter_next(&iter, &line, &linelen)) && found) {
+			struct split_string split;
+			uint64_t hash;
+			size_t *target;
+
+			if (!split_string(line, linelen, ':', &split))
+				ALWAYS_UNREACHABLE();
+
+			if (split.xlen < 6 || split.xlen > 12)
+				continue;
+
+			hash = hash_bytes(split.x, split.xlen);
+
+			if (hash == hash_bytes("MemTotal", 8))
+				target = &memtotal;
+			else if (hash == hash_bytes("MemFree", 7))
+				target = &memfree;
+			else if (hash == hash_bytes("Buffers", 7))
+				target = &buffers;
+			else if (hash == hash_bytes("Cached", 6))
+				target = &cached;
+			else if (hash == hash_bytes("SReclaimable", 12))
+				target = &srecl;
+			else
+				continue;
+
+			*target = parse_size_t(trim_string_left(split.y, &split.ylen));
+			--found;
+		}
+
+		return fmt_human((memtotal - memfree - buffers - cached - srecl) * 1024, 1024);
 	}
 #elif defined(__OpenBSD__)
 	#include <stdlib.h>
