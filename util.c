@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "util.h"
+#include "util-aux.h"
 
 char *argv0;
 
@@ -52,10 +53,10 @@ evsnprintf(char *str, size_t size, const char *fmt, va_list ap)
 
 	ret = vsnprintf(str, size, fmt, ap);
 
-	if (ret < 0) {
+	if (unlikely(ret < 0)) {
 		warn("vsnprintf:");
 		return -1;
-	} else if ((size_t)ret >= size) {
+	} else if (unlikely((size_t)ret >= size)) {
 		warn("vsnprintf: Output truncated");
 		return -1;
 	}
@@ -128,7 +129,7 @@ pscanf(const char *path, const char *fmt, ...)
 	va_list ap;
 	int n;
 
-	if (!(fp = fopen(path, "r"))) {
+	if (unlikely(!(fp = fopen(path, "r")))) {
 		warn("fopen '%s':", path);
 		return -1;
 	}

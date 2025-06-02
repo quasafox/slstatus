@@ -4,6 +4,7 @@
 
 #include "../slstatus.h"
 #include "../util.h"
+#include "../util-aux.h"
 
 #if defined(__linux__)
 	#include <linux/limits.h>
@@ -86,16 +87,16 @@ next:
 		char path[PATH_MAX];
 
 		if (!interface) {
-			if (!detected_iface && !detect_up_iface())
+			if (unlikely(!detected_iface && !detect_up_iface()))
 				return NULL;
 			interface = detected_iface;
 		}
 
 		oldrxbytes = rxbytes;
 
-		if (esnprintf(path, sizeof(path), NET_RX_BYTES, interface) < 0)
+		if (unlikely(esnprintf(path, sizeof(path), NET_RX_BYTES, interface) < 0))
 			return NULL;
-		if (pscanf(path, "%ju", &rxbytes) != 1)
+		if (unlikely(pscanf(path, "%ju", &rxbytes) != 1))
 			goto redetect;
 		if (oldrxbytes == 0)
 			return NULL;
@@ -117,16 +118,16 @@ redetect:
 		char path[PATH_MAX];
 
 		if (!interface) {
-			if (!detected_iface && !detect_up_iface())
+			if (unlikely(!detected_iface && !detect_up_iface()))
 				return NULL;
 			interface = detected_iface;
 		}
 
 		oldtxbytes = txbytes;
 
-		if (esnprintf(path, sizeof(path), NET_TX_BYTES, interface) < 0)
+		if (unlikely(esnprintf(path, sizeof(path), NET_TX_BYTES, interface) < 0))
 			return NULL;
-		if (pscanf(path, "%ju", &txbytes) != 1)
+		if (unlikely(pscanf(path, "%ju", &txbytes) != 1))
 			goto redetect;
 		if (oldtxbytes == 0)
 			return NULL;

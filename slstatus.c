@@ -12,6 +12,7 @@
 #include "arg.h"
 #include "slstatus.h"
 #include "util.h"
+#include "util-aux.h"
 
 struct arg {
 	const char *(*func)(const char *);
@@ -82,7 +83,7 @@ main(int argc, char *argv[])
 	stdout_pipe = S_ISFIFO(statb.st_mode);
 
 	do {
-		if (clock_gettime(CLOCK_MONOTONIC, &start) < 0)
+		if (unlikely(clock_gettime(CLOCK_MONOTONIC, &start) < 0))
 			die("clock_gettime:");
 
 		status[0] = '\0';
@@ -90,8 +91,8 @@ main(int argc, char *argv[])
 			if (!(res = args[i].func(args[i].args)))
 				res = unknown_str;
 
-			if ((ret = esnprintf(status + len, sizeof(status) - len,
-			                     args[i].fmt, res)) < 0)
+			if (unlikely((ret = esnprintf(status + len, sizeof(status) - len,
+			                              args[i].fmt, res)) < 0))
 				break;
 
 			len += ret;
@@ -104,15 +105,15 @@ main(int argc, char *argv[])
 			    .iov_len = len
 			};
 
-			if (vmsplice(STDOUT_FILENO, &iobuf, 1, 0) < 0)
+			if (unlikely(vmsplice(STDOUT_FILENO, &iobuf, 1, 0) < 0))
 				warn("vmsplice():");
 		} else {
-			if (write(STDOUT_FILENO, status, len) < 0)
+			if (unlikely(write(STDOUT_FILENO, status, len) < 0))
 				warn("write():");
 		}
 
-		if (!done) {
-			if (clock_gettime(CLOCK_MONOTONIC, &current) < 0)
+		if (likely(!done)) {
+			if (unlikely(clock_gettime(CLOCK_MONOTONIC, &current) < 0))
 				die("clock_gettime:");
 			difftimespec(&diff, &current, &start);
 
@@ -120,9 +121,9 @@ main(int argc, char *argv[])
 			intspec.tv_nsec = (interval % 1000) * 1E6;
 			difftimespec(&wait, &intspec, &diff);
 
-			if (wait.tv_sec >= 0 &&
-			    nanosleep(&wait, NULL) < 0 &&
-			    errno != EINTR)
+			if (unlikely(wait.tv_sec >= 0 &&
+			             nanosleep(&wait, NULL) < 0 &&
+			             errno != EINTR))
 					die("nanosleep:");
 		}
 	} while (!done);
